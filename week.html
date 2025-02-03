@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week-Calendar</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="calendar">
+      <div class="header">
+        <select id="view-select" onchange="changeView(this.value)">
+          <option value="day">Day</option>
+          <option value="week" selected>Week</option>
+          <option value="month">Month</option>
+        </select>
+        <h1>Week View</h1>
+        <button id="add-event-btn">+</button>
+      </div>
+
+      <!-- Time Slots -->
+      <div class="time-slots">
+        <!-- Time Labels -->
+        <div class="time-labels">
+          <div class="time-label">12:00 AM</div>
+          <div class="time-label">1:00 AM</div>
+          <div class="time-label">2:00 AM</div>
+          <div class="time-label">3:00 AM</div>
+          <div class="time-label">4:00 AM</div>
+          <div class="time-label">5:00 AM</div>
+          <div class="time-label">6:00 AM</div>
+          <div class="time-label">7:00 AM</div>
+          <div class="time-label">8:00 AM</div>
+          <div class="time-label">9:00 AM</div>
+          <div class="time-label">10:00 AM</div>
+          <div class="time-label">11:00 AM</div>
+          <div class="time-label">12:00 PM</div>
+          <div class="time-label">1:00 PM</div>
+          <div class="time-label">2:00 PM</div>
+          <div class="time-label">3:00 PM</div>
+          <div class="time-label">4:00 PM</div>
+          <div class="time-label">5:00 PM</div>
+          <div class="time-label">6:00 PM</div>
+          <div class="time-label">7:00 PM</div>
+          <div class="time-label">8:00 PM</div>
+          <div class="time-label">9:00 PM</div>
+          <div class="time-label">10:00 PM</div>
+          <div class="time-label">11:00 PM</div>
+        </div>
+
+        <div class="week-container">
+          <div class="week-day">Monday</div>
+          <div class="week-day">Tuesday</div>
+          <div class="week-day">Wednesday</div>
+          <div class="week-day">Thursday</div>
+          <div class="week-day">Friday</div>
+          <div class="week-day">Saturday</div>
+          <div class="week-day">Sunday</div>
+        </div>
+
+        <!-- <div class="events-container">
+          <div class="time-slot" data-time="00:00"></div>
+          <div class="time-slot" data-time="01:00"></div>
+          <div class="time-slot" data-time="02:00"></div>
+          <div class="time-slot" data-time="03:00"></div>
+          <div class="time-slot" data-time="04:00"></div>
+          <div class="time-slot" data-time="05:00"></div>
+          <div class="time-slot" data-time="06:00"></div>
+          <div class="time-slot" data-time="07:00"></div>
+          <div class="time-slot" data-time="08:00"></div>
+          <div class="time-slot" data-time="09:00"></div>
+          <div class="time-slot" data-time="10:00"></div>
+          <div class="time-slot" data-time="11:00"></div>
+          <div class="time-slot" data-time="12:00"></div>
+          <div class="time-slot" data-time="13:00"></div>
+          <div class="time-slot" data-time="14:00"></div>
+          <div class="time-slot" data-time="15:00"></div>
+          <div class="time-slot" data-time="16:00"></div>
+          <div class="time-slot" data-time="17:00"></div>
+          <div class="time-slot" data-time="18:00"></div>
+          <div class="time-slot" data-time="19:00"></div>
+          <div class="time-slot" data-time="20:00"></div>
+          <div class="time-slot" data-time="21:00"></div>
+          <div class="time-slot" data-time="22:00"></div>
+          <div class="time-slot" data-time="23:00"></div>
+        </div> -->
+      </div>
+    </div>
+
+    <div id="event-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Add Event</h2>
+        <form id="event-form">
+          <label for="event-name">Event Name</label>
+          <input type="text" id="event-name" required />
+
+          <label for="event-start-time">Start Time</label>
+          <input type="time" id="event-start-time" required />
+
+          <label for="event-duration">Duration (hours)</label>
+          <input type="number" id="event-duration" min="1" value="1" required />
+
+          <label for="event-attendees">Attendees</label>
+          <input
+            type="text"
+            id="event-attendees"
+            placeholder="Enter attendee names"
+            required
+          />
+
+          <div class="form-buttons">
+            <button type="submit">Add</button>
+            <button type="button" id="cancel-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="event-details-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Event Details</h2>
+        <div id="event-details-content"></div>
+        <div class="form-buttons">
+          <button id="edit-event-btn">Edit</button>
+          <button id="delete-event-btn">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
