@@ -48,13 +48,14 @@ body {
   display: flex;
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden;
+  /* overflow-x: hidden; */
 }
 
 .time-labels {
   width: 5rem;
   text-align: right;
   padding-right: 0.75rem;
+  padding-top: 1rem;
 }
 
 .time-label {
@@ -199,4 +200,24 @@ body {
 #view-select:focus {
   outline: none;
   border-color: #1a73e8;
+}
+
+.week-container {
+  display: grid;
+  width: 100%;
+  flex: 1;
+  position: relative;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.week-day {
+  display: flex;
+  flex-direction: column;
+}
+
+.week-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid black;
 }
