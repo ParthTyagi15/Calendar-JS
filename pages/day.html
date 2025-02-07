@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Day-Calendar</title>
+    <link rel="stylesheet" href="../styles/style.css" />
+    <script src="../scripts/script.js" defer></script>
+  </head>
+  <body>
+    <div class="calendar">
+      <div class="header">
+        <select id="view-select">
+          <option value="day" selected>Day</option>
+          <option value="week">Week</option>
+          <option value="month">Month</option>
+        </select>
+        <button class="prevBtn">&larr;</button>
+        <h1 id="current-date"></h1>
+        <button class="nextBtn">&rarr;</button>
+        <button id="add-event-btn">+</button>
+      </div>
+
+      <!-- Time Slots -->
+      <div class="time-slots">
+        <!-- Time Labels -->
+        <div class="time-labels"></div>
+
+        <div class="events-container"></div>
+      </div>
+    </div>
+
+    <div id="event-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Add Event</h2>
+        <form id="event-form">
+          <label for="event-name">Event Name</label>
+          <input type="text" id="event-name" required />
+
+          <label for="event-start-time">Start Time</label>
+          <input type="time" id="event-start-time" required />
+
+          <label for="event-duration">Duration (hours)</label>
+          <input type="number" id="event-duration" min="1" value="1" required />
+
+          <label for="event-attendees">Attendees</label>
+          <input
+            type="text"
+            id="event-attendees"
+            placeholder="Enter attendee names"
+            required
+          />
+
+          <div class="form-buttons">
+            <button type="submit">Add</button>
+            <button type="button" id="cancel-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="event-details-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Event Details</h2>
+        <div id="event-details-content"></div>
+        <div class="form-buttons">
+          <button id="edit-event-btn">Edit</button>
+          <button id="delete-event-btn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

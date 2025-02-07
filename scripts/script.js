@@ -1,23 +1,5 @@
 const viewSelect = document.getElementById("view-select");
-
-viewSelect.addEventListener("change", () => {
-  currentView = viewSelect.value;
-  updateCalendarView(currentView);
-});
-
-function updateCalendarView(view) {
-  const timeSlots = document.querySelector(".time-slots");
-
-  if (view === "day") {
-    window.location.href = "day.html";
-  } else if (view === "week") {
-    window.location.href = "week.html";
-  } else if (view === "month") {
-    window.location.href = "month.html";
-  }
-}
-
-// Get DOM Elements
+const currentDateElement = document.getElementById("current-date");
 const addEventBtn = document.getElementById("add-event-btn");
 const eventModal = document.getElementById("event-modal");
 const eventDetailsModal = document.getElementById("event-details-modal");
@@ -26,24 +8,26 @@ const closeDetailsModal = document.querySelector("#event-details-modal .close");
 const cancelBtn = document.getElementById("cancel-btn");
 const eventForm = document.getElementById("event-form");
 const eventsContainer = document.querySelector(".events-container");
-const currentDateElement = document.getElementById("current-date");
 const eventDetailsContent = document.getElementById("event-details-content");
 const editEventBtn = document.getElementById("edit-event-btn");
 const deleteEventBtn = document.getElementById("delete-event-btn");
 
-// Set Current Date
-const today = new Date();
-const options = {
-  weekday: "long",
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-};
-currentDateElement.textContent = today.toLocaleDateString("en-US", options);
+const prevBtn = document.querySelector(".prevBtn");
+const nextBtn = document.querySelector(".nextBtn");
 
-// Array to store events
-let events = [];
-let selectedEventIndex = null;
+nextBtn.addEventListener("click", () => {
+  today.setDate(today.getDate() + 1);
+  const eventsContainer = document.querySelector(".events-container");
+  eventsContainer.innerHTML = "";
+  populateDay();
+});
+
+prevBtn.addEventListener("click", () => {
+  today.setDate(today.getDate() - 1);
+  const eventsContainer = document.querySelector(".events-container");
+  eventsContainer.innerHTML = "";
+  populateDay();
+});
 
 // Event Listeners
 addEventBtn.addEventListener("click", () => openModal(eventModal));
@@ -56,7 +40,74 @@ eventForm.addEventListener("submit", handleFormSubmit);
 editEventBtn.addEventListener("click", editEvent);
 deleteEventBtn.addEventListener("click", deleteEvent);
 
-document.querySelectorAll(".time-slot").forEach((slot) => {
+currentDateElement.addEventListener("click", () => {
+  location.reload();
+});
+
+viewSelect.addEventListener("change", () => {
+  currentView = viewSelect.value;
+  updateCalendarView(currentView);
+});
+
+document
+  .querySelectorAll(".time-slot")
+  .forEach((slot) => addEventListenerToSlot(slot));
+
+// Array to store events
+let events = localStorage.getItem("events")
+  ? JSON.parse(localStorage.getItem("events"))
+  : [];
+let selectedEventIndex = null;
+
+window.addEventListener("load", populateDay);
+
+function updateCalendarView(view) {
+  if (view === "day") {
+    window.location.href = "/pages/day.html";
+  } else if (view === "week") {
+    window.location.href = "/pages/week.html";
+  } else if (view === "month") {
+    window.location.href = "/pages/month.html";
+  }
+}
+
+// Set Current Date
+const today = new Date();
+const options = {
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+};
+
+function populateDay() {
+  currentDateElement.textContent = today.toLocaleDateString("en-US", options);
+  const eventsContainer = document.querySelector(".events-container");
+  const timeLabelsElement = document.querySelector(".time-labels");
+
+  for (let j = 0; j < 24; j++) {
+    const timeLabelElement = document.createElement("div");
+    timeLabelElement.className = "time-label";
+    timeLabelElement.textContent = `${j.toString().padStart(2, "0")}:00`;
+    timeLabelsElement.appendChild(timeLabelElement);
+    let data_time = `${j.toString().padStart(2, "0")}:00`;
+    const timeSlotElement = document.createElement("div");
+    timeSlotElement.className = "time-slot";
+    timeSlotElement.setAttribute("data-time", data_time);
+    timeSlotElement.setAttribute(
+      "data-day",
+      today.toLocaleDateString("en-US", options)
+    );
+    addEventListenerToSlot(timeSlotElement);
+    eventsContainer.appendChild(timeSlotElement);
+  }
+  renderEvents();
+}
+// populateDay();
+
+// Get DOM Elements
+
+function addEventListenerToSlot(slot) {
   slot.addEventListener("click", (e) => {
     if (e.target.classList.contains("event")) {
       return; // Prevents opening add event modal when clicking an existing event
@@ -71,7 +122,7 @@ document.querySelectorAll(".time-slot").forEach((slot) => {
       openModal(eventModal);
     }
   });
-});
+}
 
 // Functions
 function openModal(modal) {
@@ -90,6 +141,7 @@ function handleFormSubmit(e) {
     startTime: document.getElementById("event-start-time").value,
     duration: parseInt(document.getElementById("event-duration").value),
     attendees: document.getElementById("event-attendees").value,
+    date: document.getElementById("current-date").textContent,
   };
 
   if (selectedEventIndex !== null) {
@@ -98,7 +150,7 @@ function handleFormSubmit(e) {
   } else {
     events.push(event);
   }
-
+  localStorage.setItem("events", JSON.stringify(events));
   renderEvents();
   eventForm.reset();
   closeModalFunc(eventModal);
@@ -106,14 +158,15 @@ function handleFormSubmit(e) {
 
 function renderEvents() {
   document.querySelectorAll(".event").forEach((event) => event.remove());
-
+  const events = JSON.parse(localStorage.getItem("events"));
+  if (!events) return;
   events.sort((a, b) => a.startTime.localeCompare(b.startTime));
   const groupedEvents = groupOverlappingEvents(events);
 
   groupedEvents.forEach((group) => {
     group.forEach((event) => {
       const eventElement = createEventElement(event, group.length > 1);
-
+      // console.log(eventElement);
       findAndPutEventSlot(event, eventElement);
 
       eventElement.addEventListener("click", () =>
@@ -125,8 +178,20 @@ function renderEvents() {
 
 function findAndPutEventSlot(event, eventElement) {
   document.querySelectorAll(".time-slot").forEach((slot) => {
-    if (slot.getAttribute("data-time") == event.startTime) {
-      eventElement.style.position = "relative";
+    console.log(event.date);
+    if (
+      slot.getAttribute("data-time") == event.startTime &&
+      slot.getAttribute("data-day") == event.date
+    ) {
+      console.log("pakda");
+      eventElement.style.position = "absolute";
+
+      const [startHour, startMinute] = event.startTime.split(":").map(Number);
+      // const topPosition = startHour * 65 + startMinute; // 65 pixels per hour
+      const height = event.duration * 65; // 65 pixels per hour
+
+      // eventElement.style.top = `${topPosition}px`;
+      eventElement.style.height = `${height}px`;
 
       // Count the existing events in the same slot
       let existingEvents = slot.querySelectorAll(".event");
@@ -136,12 +201,12 @@ function findAndPutEventSlot(event, eventElement) {
 
       eventElement.style.width = eventWidth;
       eventElement.style.left = leftOffset;
+      eventElement.style.zIndex = 1;
 
       existingEvents.forEach((e, index) => {
         e.style.width = eventWidth;
         e.style.left = index * (100 / (existingEvents.length + 1)) + "%";
       });
-
       slot.appendChild(eventElement);
     }
   });
@@ -152,24 +217,50 @@ function createEventElement(event, isOverlapping) {
   eventElement.className = `event ${isOverlapping ? "overlap" : ""}`;
   eventElement.textContent = `${event.name} (${event.attendees})`;
 
-  const [startHour, startMinute] = event.startTime.split(":").map(Number);
-  const topPosition = (startHour * 60 + startMinute) * (60 / 60);
-  const height = event.duration * 60;
-
-  //   eventElement.style.top = `${topPosition}px`;
-  //   eventElement.style.height = `${height}px`;
-
   return eventElement;
 }
 
 function displayEventDetails(event, index) {
   selectedEventIndex = index;
-  eventDetailsContent.innerHTML = `
-    <p><strong>Event Name:</strong> ${event.name}</p>
-    <p><strong>Start Time:</strong> ${event.startTime}</p>
-    <p><strong>Duration:</strong> ${event.duration} hours</p>
-    <p><strong>Attendees:</strong> ${event.attendees}</p>
-  `;
+
+  eventDetailsContent.innerHTML = "";
+
+  const eventName = document.createElement("p");
+  const eventNameStrong = document.createElement("strong");
+  eventNameStrong.textContent = "Event Name: ";
+  eventName.textContent = event.name;
+  eventName.insertAdjacentElement("afterbegin", eventNameStrong);
+
+  const eventStartTime = document.createElement("p");
+  const eventStartTimeStrong = document.createElement("strong");
+  eventStartTimeStrong.textContent = "Start Time: ";
+  eventStartTime.textContent = event.startTime;
+  eventStartTime.insertAdjacentElement("afterbegin", eventStartTimeStrong);
+
+  const eventDuration = document.createElement("p");
+  const eventDurationStrong = document.createElement("strong");
+  eventDurationStrong.textContent = "Duration: ";
+  eventDuration.textContent = event.duration;
+  eventDuration.insertAdjacentElement("afterbegin", eventDurationStrong);
+
+  const eventAttendees = document.createElement("p");
+  const eventAttendeesStrong = document.createElement("strong");
+  eventAttendeesStrong.textContent = "Attendees: ";
+  eventAttendees.textContent = event.attendees;
+  eventAttendees.insertAdjacentElement("afterbegin", eventAttendeesStrong);
+
+  const eventDate = document.createElement("p");
+  const eventDateStrong = document.createElement("strong");
+  eventDateStrong.textContent = "Date: ";
+  eventDate.textContent = event.date;
+  eventDate.insertAdjacentElement("afterbegin", eventDateStrong);
+
+  eventDetailsContent.appendChild(eventName);
+  eventDetailsContent.appendChild(eventStartTime);
+  eventDetailsContent.appendChild(eventDuration);
+  eventDetailsContent.appendChild(eventAttendees);
+  eventDetailsContent.appendChild(eventDate);
+
   openModal(eventDetailsModal);
 }
 
