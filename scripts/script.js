@@ -149,7 +149,10 @@ function handleFormSubmit(e) {
     date: document.getElementById("current-date").textContent,
   };
   const endTime = getEndTime(event);
-  if (endTime > "24:00") alert("Sorry! Not allowed");
+  if (endTime > "24:00") {
+    alert("Sorry! Not allowed");
+    return;
+  }
 
   if (selectedEventIndex !== null) {
     events[selectedEventIndex] = event;
