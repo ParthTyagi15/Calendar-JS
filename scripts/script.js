@@ -98,10 +98,7 @@ function populateDay() {
     const timeSlotElement = document.createElement("div");
     timeSlotElement.className = "time-slot";
     timeSlotElement.setAttribute("data-time", data_time);
-    timeSlotElement.setAttribute(
-      "data-day",
-      today.toLocaleDateString("en-US", options)
-    );
+    timeSlotElement.setAttribute("data-day", today.toISOString().split("T")[0]);
     addEventListenerToSlot(timeSlotElement);
     eventsContainer.appendChild(timeSlotElement);
   }
@@ -116,13 +113,15 @@ function addEventListenerToSlot(slot) {
     if (e.target.classList.contains("event")) {
       return; // Prevents opening add event modal when clicking an existing event
     }
-
     const existingEvent = slot.querySelector(".event");
     if (existingEvent) {
       existingEvent.click(); // Open event details modal
     } else {
       document.getElementById("event-start-time").value =
         slot.getAttribute("data-time");
+      document.getElementById("event-date").value = today
+        .toISOString()
+        .split("T")[0];
       openModal(eventModal);
     }
   });
@@ -146,8 +145,11 @@ function handleFormSubmit(e) {
     startTime: document.getElementById("event-start-time").value,
     duration: parseInt(document.getElementById("event-duration").value),
     attendees: document.getElementById("event-attendees").value,
-    date: document.getElementById("current-date").textContent,
+    // date: document.getElementById("current-date").textContent,
+    date: document.getElementById("event-date").value,
   };
+
+  console.log(event.date);
   const endTime = getEndTime(event);
   if (endTime > "24:00") {
     alert("Sorry! Not allowed");
@@ -225,9 +227,9 @@ function createEventElement(event, isOverlapping) {
   eventElement.className = `event ${isOverlapping ? "overlap" : ""}`;
   eventElement.textContent = `${event.name} (${event.attendees})`;
 
-  eventElement.style.backgroundColor = isOverlapping
-    ? getRandomColor()
-    : "#4CAF50"; // Default color for non-overlapping events
+  // eventElement.style.backgroundColor = isOverlapping
+  //   ? getRandomColor()
+  //   : "#4CAF50"; // Default color for non-overlapping events
   return eventElement;
 }
 
@@ -333,14 +335,14 @@ function getEndTime(event) {
     .padStart(2, "0")}`;
 }
 
-function getRandomColor() {
-  const letters = "0123456789ABCDEF";
-  let color = "#";
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-}
+// function getRandomColor() {
+//   const letters = "0123456789ABCDEF";
+//   let color = "#";
+//   for (let i = 0; i < 6; i++) {
+//     color += letters[Math.floor(Math.random() * 16)];
+//   }
+//   return color;
+// }
 
 window.addEventListener("click", (event) => {
   if (event.target === eventModal) {
