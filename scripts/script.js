@@ -143,15 +143,18 @@ function handleFormSubmit(e) {
   const event = {
     name: document.getElementById("event-name").value,
     startTime: document.getElementById("event-start-time").value,
-    duration: parseInt(document.getElementById("event-duration").value),
+    endTime: document.getElementById("event-end-time").value,
+    // duration: parseInt(document.getElementById("event-duration").value),
     attendees: document.getElementById("event-attendees").value,
-    // date: document.getElementById("current-date").textContent,
     date: document.getElementById("event-date").value,
   };
 
-  console.log(event.date);
-  const endTime = getEndTime(event);
-  if (endTime > "24:00") {
+  if (event.endTime < event.startTime) {
+    alert("Sorry! Not allowed to have end time before than start time");
+    return;
+  }
+
+  if (event.endTime > "24:00") {
     alert("Sorry! Not allowed");
     return;
   }
@@ -188,35 +191,51 @@ function renderEvents() {
   });
 }
 
+function normaliseTime(time) {
+  const [hour, minute] = time.split(":");
+  return hour + ":00";
+}
+
 function findAndPutEventSlot(event, eventElement) {
   document.querySelectorAll(".time-slot").forEach((slot) => {
     if (
-      slot.getAttribute("data-time") == event.startTime &&
+      slot.getAttribute("data-time") == normaliseTime(event.startTime) &&
       slot.getAttribute("data-day") == event.date
     ) {
       eventElement.style.position = "absolute";
 
       const [startHour, startMinute] = event.startTime.split(":").map(Number);
-      // const topPosition = startHour * 65 + startMinute; // 65 pixels per hour
-      const height = event.duration * 65; // 65 pixels per hour
+      const [endHour, endMinute] = event.endTime.split(":").map(Number);
 
-      // eventElement.style.top = `${topPosition}px`;
+      let durationMinute, durationHour;
+      if (endMinute > startMinute) {
+        durationMinute = endMinute - startMinute;
+        durationHour = endHour - startHour;
+      } else {
+        durationMinute = 60 + (endMinute - startMinute);
+        durationHour = endHour - startHour - 1;
+      }
+
+      const topPosition = startMinute * (65 / 60);
+      const height = durationHour * 65 + durationMinute * (65 / 60); // 65 pixels per hour
+
+      eventElement.style.top = `${topPosition}px`;
       eventElement.style.height = `${height}px`;
 
       // Count the existing events in the same slot
-      let existingEvents = slot.querySelectorAll(".event");
-      let eventWidth = 100 / (existingEvents.length + 1) + "%";
-      let leftOffset =
-        existingEvents.length * (100 / (existingEvents.length + 1)) + "%";
+      // let existingEvents = slot.querySelectorAll(".event");
+      // let eventWidth = 100 / (existingEvents.length + 1) + "%";
+      // let leftOffset =
+      //   existingEvents.length * (100 / (existingEvents.length + 1)) + "%";
 
-      eventElement.style.width = eventWidth;
-      eventElement.style.left = leftOffset;
+      // eventElement.style.width = eventWidth;
+      // eventElement.style.left = leftOffset;
       eventElement.style.zIndex = 1;
 
-      existingEvents.forEach((e, index) => {
-        e.style.width = eventWidth;
-        e.style.left = index * (100 / (existingEvents.length + 1)) + "%";
-      });
+      // existingEvents.forEach((e, index) => {
+      //   e.style.width = eventWidth;
+      //   e.style.left = index * (100 / (existingEvents.length + 1)) + "%";
+      // });
       slot.appendChild(eventElement);
     }
   });
@@ -242,6 +261,7 @@ function displayEventDetails(event, index) {
   const eventNameStrong = document.createElement("strong");
   eventNameStrong.textContent = "Event Name: ";
   eventName.textContent = event.name;
+  eventName.className = "textOverflow";
   eventName.insertAdjacentElement("afterbegin", eventNameStrong);
 
   const eventStartTime = document.createElement("p");
@@ -250,16 +270,17 @@ function displayEventDetails(event, index) {
   eventStartTime.textContent = event.startTime;
   eventStartTime.insertAdjacentElement("afterbegin", eventStartTimeStrong);
 
-  const eventDuration = document.createElement("p");
-  const eventDurationStrong = document.createElement("strong");
-  eventDurationStrong.textContent = "Duration: ";
-  eventDuration.textContent = event.duration;
-  eventDuration.insertAdjacentElement("afterbegin", eventDurationStrong);
+  const eventEndTime = document.createElement("p");
+  const eventEndTimeStrong = document.createElement("strong");
+  eventEndTimeStrong.textContent = "End Time: ";
+  eventEndTime.textContent = event.endTime;
+  eventEndTime.insertAdjacentElement("afterbegin", eventEndTimeStrong);
 
   const eventAttendees = document.createElement("p");
   const eventAttendeesStrong = document.createElement("strong");
   eventAttendeesStrong.textContent = "Attendees: ";
   eventAttendees.textContent = event.attendees;
+  eventName.className = "textOverflow";
   eventAttendees.insertAdjacentElement("afterbegin", eventAttendeesStrong);
 
   const eventDate = document.createElement("p");
@@ -270,7 +291,7 @@ function displayEventDetails(event, index) {
 
   eventDetailsContent.appendChild(eventName);
   eventDetailsContent.appendChild(eventStartTime);
-  eventDetailsContent.appendChild(eventDuration);
+  eventDetailsContent.appendChild(eventEndTime);
   eventDetailsContent.appendChild(eventAttendees);
   eventDetailsContent.appendChild(eventDate);
 
@@ -281,11 +302,13 @@ function editEvent() {
   if (selectedEventIndex !== null) {
     const event = events[selectedEventIndex];
     document.getElementById("event-name").value = event.name;
+    document.getElementById("event-date").value = event.date;
     document.getElementById("event-start-time").value = event.startTime;
-    document.getElementById("event-duration").value = event.duration;
+    document.getElementById("event-end-time").value = event.endTime;
     document.getElementById("event-attendees").value = event.attendees;
     closeModalFunc(eventDetailsModal, true);
     openModal(eventModal);
+    selectedEventIndex = null;
   }
 }
 
@@ -308,7 +331,8 @@ function groupOverlappingEvents(events) {
       currentGroup.push(event);
     } else {
       const lastEventInGroup = currentGroup[currentGroup.length - 1];
-      const lastEventEndTime = getEndTime(lastEventInGroup);
+      // const lastEventEndTime = getEndTime(lastEventInGroup);
+      const lastEventEndTime = lastEventInGroup.endTime;
       const currentEventStartTime = event.startTime;
 
       if (currentEventStartTime < lastEventEndTime) {
@@ -327,13 +351,13 @@ function groupOverlappingEvents(events) {
   return groupedEvents;
 }
 
-function getEndTime(event) {
-  const [startHour, startMinute] = event.startTime.split(":").map(Number);
-  const endHour = startHour + event.duration;
-  return `${endHour.toString().padStart(2, "0")}:${startMinute
-    .toString()
-    .padStart(2, "0")}`;
-}
+// function getEndTime(event) {
+//   const [startHour, startMinute] = event.startTime.split(":").map(Number);
+//   const endHour = startHour + event.duration;
+//   return `${endHour.toString().padStart(2, "0")}:${startMinute
+//     .toString()
+//     .padStart(2, "0")}`;
+// }
 
 // function getRandomColor() {
 //   const letters = "0123456789ABCDEF";

@@ -130,7 +130,7 @@ function populateWeek(today) {
       timeSlotElement.setAttribute("data-time", data_time);
       timeSlotElement.setAttribute(
         "data-day",
-        days[i].toLocaleDateString("en-us", options)
+        days[i].toISOString().split("T")[0]
       );
       addEventListenerToSlot(timeSlotElement);
       weekEventContainer.appendChild(timeSlotElement);
@@ -192,9 +192,10 @@ function handleFormSubmit(e) {
   const event = {
     name: document.getElementById("event-name").value,
     startTime: document.getElementById("event-start-time").value,
-    duration: parseInt(document.getElementById("event-duration").value),
+    endTime: document.getElementById("event-end-time").value,
+    // duration: parseInt(document.getElementById("event-duration").value),
     attendees: document.getElementById("event-attendees").value,
-    date: document.getElementById("event-date").value, // TODO
+    date: document.getElementById("event-date").value,
   };
 
   if (selectedEventIndex !== null) {
@@ -225,23 +226,39 @@ function renderEvents() {
   });
 }
 
+function normaliseTime(time) {
+  const [hour, minute] = time.split(":");
+  return hour + ":00";
+}
+
 function findAndPutEventSlot(event, eventElement) {
   document.querySelectorAll(".time-slot").forEach((slot) => {
     if (
-      slot.getAttribute("data-time") == event.startTime &&
+      slot.getAttribute("data-time") == normaliseTime(event.startTime) &&
       slot.getAttribute("data-day") == event.date
     ) {
       eventElement.style.position = "relative";
 
       const [startHour, startMinute] = event.startTime.split(":").map(Number);
-      // const topPosition = startHour * 65 + startMinute; // 65 pixels per hour
-      const height = event.duration * 65; // 65 pixels per hour
+      const [endHour, endMinute] = event.endTime.split(":").map(Number);
 
-      // eventElement.style.top = `${topPosition}px`;
+      let durationMinute, durationHour;
+      if (endMinute > startMinute) {
+        durationMinute = endMinute - startMinute;
+        durationHour = endHour - startHour;
+      } else {
+        durationMinute = 60 + (endMinute - startMinute);
+        durationHour = endHour - startHour - 1;
+      }
+
+      const topPosition = startMinute * (65 / 60);
+      const height = durationHour * 65 + durationMinute * (65 / 60); // 65 pixels per hour
+
+      eventElement.style.top = `${topPosition}px`;
       eventElement.style.height = `${height}px`;
 
       // Count the existing events in the same slot
-      let existingEvents = slot.querySelectorAll(".event");
+      // let existingEvents = slot.querySelectorAll(".event");
       // let eventWidth = 100 / (existingEvents.length + 1) + "%";
       // let leftOffset =
       //   existingEvents.length * (100 / (existingEvents.length + 1)) + "%";
@@ -250,10 +267,10 @@ function findAndPutEventSlot(event, eventElement) {
       // eventElement.style.left = leftOffset;
       eventElement.style.zIndex = 1;
 
-      existingEvents.forEach((e, index) => {
-        e.style.width = eventWidth;
-        e.style.left = index * (100 / (existingEvents.length + 1)) + "%";
-      });
+      // existingEvents.forEach((e, index) => {
+      //   e.style.width = eventWidth;
+      //   e.style.left = index * (100 / (existingEvents.length + 1)) + "%";
+      // });
 
       slot.appendChild(eventElement);
     }
@@ -277,6 +294,7 @@ function displayEventDetails(event, index) {
   const eventNameStrong = document.createElement("strong");
   eventNameStrong.textContent = "Event Name: ";
   eventName.textContent = event.name;
+  eventName.className = "textOverflow";
   eventName.insertAdjacentElement("afterbegin", eventNameStrong);
 
   const eventStartTime = document.createElement("p");
@@ -285,16 +303,17 @@ function displayEventDetails(event, index) {
   eventStartTime.textContent = event.startTime;
   eventStartTime.insertAdjacentElement("afterbegin", eventStartTimeStrong);
 
-  const eventDuration = document.createElement("p");
-  const eventDurationStrong = document.createElement("strong");
-  eventDurationStrong.textContent = "Duration: ";
-  eventDuration.textContent = event.duration;
-  eventDuration.insertAdjacentElement("afterbegin", eventDurationStrong);
+  const eventEndTime = document.createElement("p");
+  const eventEndTimeStrong = document.createElement("strong");
+  eventEndTimeStrong.textContent = "End Time: ";
+  eventEndTime.textContent = event.endTime;
+  eventEndTime.insertAdjacentElement("afterbegin", eventEndTimeStrong);
 
   const eventAttendees = document.createElement("p");
   const eventAttendeesStrong = document.createElement("strong");
   eventAttendeesStrong.textContent = "Attendees: ";
   eventAttendees.textContent = event.attendees;
+  eventAttendees.className = "textOverflow";
   eventAttendees.insertAdjacentElement("afterbegin", eventAttendeesStrong);
 
   const eventDate = document.createElement("p");
@@ -305,7 +324,7 @@ function displayEventDetails(event, index) {
 
   eventDetailsContent.appendChild(eventName);
   eventDetailsContent.appendChild(eventStartTime);
-  eventDetailsContent.appendChild(eventDuration);
+  eventDetailsContent.appendChild(eventEndTime);
   eventDetailsContent.appendChild(eventAttendees);
   eventDetailsContent.appendChild(eventDate);
 
@@ -317,10 +336,12 @@ function editEvent() {
     const event = events[selectedEventIndex];
     document.getElementById("event-name").value = event.name;
     document.getElementById("event-start-time").value = event.startTime;
-    document.getElementById("event-duration").value = event.duration;
+    document.getElementById("event-end-time").value = event.endTime;
     document.getElementById("event-attendees").value = event.attendees;
+    document.getElementById("event-date").value = event.date;
     closeModalFunc(eventDetailsModal, true);
     openModal(eventModal);
+    selectedEventIndex = null;
   }
 }
 
@@ -369,3 +390,12 @@ function getEndTime(event) {
     .toString()
     .padStart(2, "0")}`;
 }
+
+window.addEventListener("click", (event) => {
+  if (event.target === eventModal) {
+    closeModalFunc(eventModal);
+  }
+  if (event.target === eventDetailsModal) {
+    closeModalFunc(eventDetailsModal);
+  }
+});

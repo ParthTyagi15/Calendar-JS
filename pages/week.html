@@ -38,16 +38,17 @@
           <label for="event-name">Event Name</label>
           <input type="text" id="event-name" required />
 
-          <div class="event-date">
-            <label for="event-date">Event Date</label>
-            <input type="text" id="event-date" required />
-          </div>
+          <label for="event-date">Event Date</label>
+          <input type="date" name="event-date" id="event-date" required />
 
           <label for="event-start-time">Start Time</label>
           <input type="time" id="event-start-time" required />
 
-          <label for="event-duration">Duration (hours)</label>
-          <input type="number" id="event-duration" min="1" value="1" required />
+          <label for="event-end-time">End Time</label>
+          <input type="time" id="event-end-time" required />
+
+          <!-- <label for="event-duration">Duration (hours)</label>
+          <input type="number" id="event-duration" min="1" value="1" required /> -->
 
           <label for="event-attendees">Attendees</label>
           <input

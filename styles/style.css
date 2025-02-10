@@ -227,3 +227,7 @@ body {
 #current-date:hover {
   cursor: pointer;
 }
+
+.textOverflow {
+  overflow-wrap: anywhere;
+}

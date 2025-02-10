@@ -77,7 +77,8 @@ body {
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
   cursor: pointer;
   /* width: 100vw; */
-  width: 100%;
+  width: 11.56rem;
+  /* width: 100%; */
   display: flex;
   flex: 1;
 }
@@ -101,9 +102,11 @@ body {
   box-sizing: border-box;
   overflow: hidden;
   cursor: pointer;
-  width: calc(100% - 10px);
   left: 0.25rem;
+  width: calc(100% - 5px);
   transition: background-color 0.3s ease;
+  white-space: nowrap;
+  text-overflow: clip;
 }
 
 .modal {
@@ -221,6 +224,7 @@ body {
 .week-day {
   display: flex;
   flex-direction: column;
+  /* max-width: 187px; */
 }
 
 .week-header {
@@ -250,4 +254,8 @@ body {
 
 #current-week:hover {
   cursor: pointer;
+}
+
+.textOverflow {
+  overflow-wrap: anywhere;
 }
