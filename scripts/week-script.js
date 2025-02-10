@@ -38,6 +38,8 @@ const nextBtn = document.querySelector(".nextBtn");
 
 nextBtn.addEventListener("click", () => {
   const weekContainer = document.querySelector(".week-container");
+  const timeLabelsElement = document.querySelector(".time-labels");
+  timeLabelsElement.innerHTML = "";
   weekContainer.innerHTML = "";
   let firstDayofNewWeek = currWeek[0];
   firstDayofNewWeek.setDate(firstDayofNewWeek.getDate() + 7);
@@ -46,6 +48,8 @@ nextBtn.addEventListener("click", () => {
 
 prevBtn.addEventListener("click", () => {
   const weekContainer = document.querySelector(".week-container");
+  const timeLabelsElement = document.querySelector(".time-labels");
+  timeLabelsElement.innerHTML = "";
   weekContainer.innerHTML = "";
   let firstDayofNewWeek = currWeek[0];
   firstDayofNewWeek.setDate(firstDayofNewWeek.getDate() - 7);
@@ -178,7 +182,8 @@ function openModal(modal) {
   modal.style.display = "flex";
 }
 
-function closeModalFunc(modal) {
+function closeModalFunc(modal, isEditable = false) {
+  if (!isEditable) eventForm.reset();
   modal.style.display = "none";
 }
 
@@ -314,7 +319,7 @@ function editEvent() {
     document.getElementById("event-start-time").value = event.startTime;
     document.getElementById("event-duration").value = event.duration;
     document.getElementById("event-attendees").value = event.attendees;
-    closeModalFunc(eventDetailsModal);
+    closeModalFunc(eventDetailsModal, true);
     openModal(eventModal);
   }
 }
@@ -322,6 +327,7 @@ function editEvent() {
 function deleteEvent() {
   if (selectedEventIndex !== null) {
     events.splice(selectedEventIndex, 1);
+    localStorage.setItem("events", JSON.stringify(events));
     renderEvents();
     closeModalFunc(eventDetailsModal);
     selectedEventIndex = null;

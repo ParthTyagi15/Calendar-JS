@@ -15,9 +15,12 @@ const deleteEventBtn = document.getElementById("delete-event-btn");
 const prevBtn = document.querySelector(".prevBtn");
 const nextBtn = document.querySelector(".nextBtn");
 
+// Event Listeners
 nextBtn.addEventListener("click", () => {
   today.setDate(today.getDate() + 1);
   const eventsContainer = document.querySelector(".events-container");
+  const timeLabelsElement = document.querySelector(".time-labels");
+  timeLabelsElement.innerHTML = "";
   eventsContainer.innerHTML = "";
   populateDay();
 });
@@ -25,11 +28,12 @@ nextBtn.addEventListener("click", () => {
 prevBtn.addEventListener("click", () => {
   today.setDate(today.getDate() - 1);
   const eventsContainer = document.querySelector(".events-container");
+  const timeLabelsElement = document.querySelector(".time-labels");
+  timeLabelsElement.innerHTML = "";
   eventsContainer.innerHTML = "";
   populateDay();
 });
 
-// Event Listeners
 addEventBtn.addEventListener("click", () => openModal(eventModal));
 closeModal.addEventListener("click", () => closeModalFunc(eventModal));
 closeDetailsModal.addEventListener("click", () =>
@@ -129,7 +133,8 @@ function openModal(modal) {
   modal.style.display = "flex";
 }
 
-function closeModalFunc(modal) {
+function closeModalFunc(modal, isEditable = false) {
+  if (!isEditable) eventForm.reset();
   modal.style.display = "none";
 }
 
@@ -143,6 +148,8 @@ function handleFormSubmit(e) {
     attendees: document.getElementById("event-attendees").value,
     date: document.getElementById("current-date").textContent,
   };
+  const endTime = getEndTime(event);
+  if (endTime > "24:00") alert("Sorry! Not allowed");
 
   if (selectedEventIndex !== null) {
     events[selectedEventIndex] = event;
@@ -178,12 +185,10 @@ function renderEvents() {
 
 function findAndPutEventSlot(event, eventElement) {
   document.querySelectorAll(".time-slot").forEach((slot) => {
-    console.log(event.date);
     if (
       slot.getAttribute("data-time") == event.startTime &&
       slot.getAttribute("data-day") == event.date
     ) {
-      console.log("pakda");
       eventElement.style.position = "absolute";
 
       const [startHour, startMinute] = event.startTime.split(":").map(Number);
@@ -217,6 +222,9 @@ function createEventElement(event, isOverlapping) {
   eventElement.className = `event ${isOverlapping ? "overlap" : ""}`;
   eventElement.textContent = `${event.name} (${event.attendees})`;
 
+  eventElement.style.backgroundColor = isOverlapping
+    ? getRandomColor()
+    : "#4CAF50"; // Default color for non-overlapping events
   return eventElement;
 }
 
@@ -271,7 +279,7 @@ function editEvent() {
     document.getElementById("event-start-time").value = event.startTime;
     document.getElementById("event-duration").value = event.duration;
     document.getElementById("event-attendees").value = event.attendees;
-    closeModalFunc(eventDetailsModal);
+    closeModalFunc(eventDetailsModal, true);
     openModal(eventModal);
   }
 }
@@ -279,6 +287,7 @@ function editEvent() {
 function deleteEvent() {
   if (selectedEventIndex !== null) {
     events.splice(selectedEventIndex, 1);
+    localStorage.setItem("events", JSON.stringify(events));
     renderEvents();
     closeModalFunc(eventDetailsModal);
     selectedEventIndex = null;
@@ -320,3 +329,21 @@ function getEndTime(event) {
     .toString()
     .padStart(2, "0")}`;
 }
+
+function getRandomColor() {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+window.addEventListener("click", (event) => {
+  if (event.target === eventModal) {
+    closeModalFunc(eventModal);
+  }
+  if (event.target === eventDetailsModal) {
+    closeModalFunc(eventDetailsModal);
+  }
+});
