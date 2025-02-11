@@ -1,19 +1,4 @@
 const viewSelect = document.getElementById("view-select");
-viewSelect.addEventListener("change", () => {
-  currentView = viewSelect.value;
-  updateCalendarView(currentView);
-});
-
-function updateCalendarView(view) {
-  if (view === "day") {
-    window.location.href = "/pages/day.html";
-  } else if (view === "week") {
-    window.location.href = "/pages/week.html";
-  } else if (view === "month") {
-    window.location.href = "/pages/month.html";
-  }
-}
-
 const calendarGrid = document.querySelector(".calendar-grid");
 const prevBtn = document.querySelector(".prevBtn");
 const nextBtn = document.querySelector(".nextBtn");
@@ -28,7 +13,25 @@ const deleteEventBtn = document.getElementById("delete-event-btn");
 const monthHolder = document.getElementById("month-holder");
 
 let currentDate = new Date();
-let events = [];
+let events = localStorage.getItem("events")
+  ? JSON.parse(localStorage.getItem("events"))
+  : [];
+let selectedEventIndex = null;
+
+viewSelect.addEventListener("change", () => {
+  const currentView = viewSelect.value;
+  updateCalendarView(currentView);
+});
+
+function updateCalendarView(view) {
+  if (view === "day") {
+    window.location.href = "/pages/day.html";
+  } else if (view === "week") {
+    window.location.href = "/pages/week.html";
+  } else if (view === "month") {
+    window.location.href = "/pages/month.html";
+  }
+}
 
 function renderCalendar(date) {
   const year = date.getFullYear();
@@ -51,48 +54,51 @@ function renderCalendar(date) {
   for (let day = 1; day <= daysInMonth; day++) {
     const calendarCell = document.createElement("div");
     calendarCell.classList.add("calendar-cell");
-    calendarCell.textContent = day;
+    // calendarCell.textContent = day;
+
+    const todayDateElement = document.createElement("div");
+    todayDateElement.classList.add("month-date-header");
+    todayDateElement.textContent = day;
+
+    calendarCell.appendChild(todayDateElement);
 
     const cellDate = new Date(year, month, day);
+    const yearStr = String(year);
+    const monthStr = String(month + 1).padStart(2, "0");
+    const dayStr = String(day).padStart(2, "0");
+    calendarCell.setAttribute(
+      "data-day",
+      yearStr + "-" + monthStr + "-" + dayStr
+    );
     if (cellDate.toDateString() === new Date().toDateString()) {
-      calendarCell.classList.add("today");
+      todayDateElement.classList.add("today");
     }
 
     const eventIndicators = document.createElement("div");
     eventIndicators.classList.add("event-indicators");
 
-    const bookedSlots = events.filter((event) => {
+    const dayEvents = events.filter((event) => {
       const eventDate = new Date(event.date);
-      return (
-        eventDate.toDateString() === cellDate.toDateString() &&
-        event.status === "booked"
-      );
+      return eventDate.toDateString() === cellDate.toDateString();
     });
 
-    const availableSlots = events.filter((event) => {
-      const eventDate = new Date(event.date);
-      return (
-        eventDate.toDateString() === cellDate.toDateString() &&
-        event.status === "available"
-      );
-    });
-
-    bookedSlots.forEach(() => {
-      const bookedDot = document.createElement("span");
-      bookedDot.classList.add("indicator", "booked");
-      eventIndicators.appendChild(bookedDot);
-    });
-
-    availableSlots.forEach(() => {
-      const availableDot = document.createElement("span");
-      availableDot.classList.add("indicator", "available");
-      eventIndicators.appendChild(availableDot);
+    dayEvents.forEach((event) => {
+      const eventDot = document.createElement("div");
+      eventDot.classList.add("indicator", "event");
+      eventDot.title = `${event.name} (${event.startTime} - ${event.endTime})`;
+      eventDot.textContent = eventDot.title;
+      eventDot.addEventListener("click", (e) => {
+        openEventDetailsModal(event);
+        e.stopPropagation();
+      });
+      eventIndicators.appendChild(eventDot);
     });
 
     calendarCell.appendChild(eventIndicators);
-    calendarCell.addEventListener("click", () => openEventModal(cellDate));
+    calendarCell.addEventListener("click", () => openEventModal(calendarCell));
     calendarGrid.appendChild(calendarCell);
   }
+
   for (let i = 0; i < 35 - daysInMonth - startingDay; i++) {
     const emptyCell = document.createElement("div");
     emptyCell.classList.add("calendar-cell", "empty");
@@ -100,23 +106,64 @@ function renderCalendar(date) {
   }
 }
 
-function openEventModal(date) {
+function openEventModal(calendarCellElement) {
+  if (calendarCellElement)
+    document.getElementById("event-date").value =
+      calendarCellElement.getAttribute("data-day");
   eventModal.style.display = "flex";
-  eventForm.dataset.date = date.toISOString();
 }
 
 function closeEventModal() {
   eventModal.style.display = "none";
+  eventForm.reset();
 }
 
 function openEventDetailsModal(event) {
-  eventDetailsContent.innerHTML = `
-    <p><strong>Event Name:</strong> ${event.name}</p>
-    <p><strong>Start Time:</strong> ${event.startTime}</p>
-    <p><strong>Duration:</strong> ${event.duration} hours</p>
-    <p><strong>Attendees:</strong> ${event.attendees}</p>
-  `;
+  selectedEventIndex = events.indexOf(event);
+  eventDetailsContent.innerHTML = "";
+
+  const eventName = document.createElement("p");
+  const eventNameStrong = document.createElement("strong");
+  eventNameStrong.textContent = "Event Name: ";
+  eventName.textContent = event.name;
+  eventName.className = "textOverflow";
+  eventName.insertAdjacentElement("afterbegin", eventNameStrong);
+
+  const eventStartTime = document.createElement("p");
+  const eventStartTimeStrong = document.createElement("strong");
+  eventStartTimeStrong.textContent = "Start Time: ";
+  eventStartTime.textContent = event.startTime;
+  eventStartTime.insertAdjacentElement("afterbegin", eventStartTimeStrong);
+
+  const eventEndTime = document.createElement("p");
+  const eventEndTimeStrong = document.createElement("strong");
+  eventEndTimeStrong.textContent = "End Time: ";
+  eventEndTime.textContent = event.endTime;
+  eventEndTime.insertAdjacentElement("afterbegin", eventEndTimeStrong);
+
+  const eventAttendees = document.createElement("p");
+  const eventAttendeesStrong = document.createElement("strong");
+  eventAttendeesStrong.textContent = "Attendees: ";
+  eventAttendees.textContent = event.attendees;
+  eventName.className = "textOverflow";
+  eventAttendees.insertAdjacentElement("afterbegin", eventAttendeesStrong);
+
+  const eventDate = document.createElement("p");
+  const eventDateStrong = document.createElement("strong");
+  eventDateStrong.textContent = "Date: ";
+  eventDate.textContent = event.date;
+  eventDate.insertAdjacentElement("afterbegin", eventDateStrong);
+
+  eventDetailsContent.appendChild(eventName);
+  eventDetailsContent.appendChild(eventStartTime);
+  eventDetailsContent.appendChild(eventEndTime);
+  eventDetailsContent.appendChild(eventAttendees);
+  eventDetailsContent.appendChild(eventDate);
   eventDetailsModal.style.display = "flex";
+
+  editEventBtn.addEventListener("click", editEvent);
+
+  deleteEventBtn.addEventListener("click", deleteEvent);
 }
 
 function closeEventDetailsModal() {
@@ -125,33 +172,59 @@ function closeEventDetailsModal() {
 
 eventForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  const eventName = document.getElementById("event-name").value;
-  const eventStartTime = document.getElementById("event-start-time").value;
-  const eventDuration = document.getElementById("event-duration").value;
-  const eventAttendees = document.getElementById("event-attendees").value;
-  const eventDate = new Date(eventForm.dataset.date);
-
-  const newEvent = {
-    date: eventDate.toISOString(),
-    name: eventName,
-    startTime: eventStartTime,
-    duration: eventDuration,
-    attendees: eventAttendees,
-    status: "booked",
+  const event = {
+    name: document.getElementById("event-name").value,
+    startTime: document.getElementById("event-start-time").value,
+    endTime: document.getElementById("event-end-time").value,
+    attendees: document.getElementById("event-attendees").value,
+    date: document.getElementById("event-date").value,
   };
 
-  events.push(newEvent);
+  if (event.endTime < event.startTime) {
+    alert("Sorry! Not allowed to have end time before than start time");
+    return;
+  }
+
+  if (event.endTime > "24:00") {
+    alert("Sorry! Not allowed");
+    return;
+  }
+
+  if (selectedEventIndex !== null) {
+    events[selectedEventIndex] = event;
+    selectedEventIndex = null;
+  } else {
+    events.push(event);
+  }
+  localStorage.setItem("events", JSON.stringify(events));
   renderCalendar(currentDate);
   closeEventModal();
 });
 
-editEventBtn.addEventListener("click", () => {
-  // Implement edit functionality
-});
+function editEvent() {
+  if (selectedEventIndex !== null) {
+    const event = events[selectedEventIndex];
+    document.getElementById("event-name").value = event.name;
+    document.getElementById("event-date").value = event.date;
+    document.getElementById("event-start-time").value = event.startTime;
+    document.getElementById("event-end-time").value = event.endTime;
+    document.getElementById("event-attendees").value = event.attendees;
+    closeEventDetailsModal();
+    openEventModal();
+  }
+}
 
-deleteEventBtn.addEventListener("click", () => {
-  // Implement delete functionality
-});
+function deleteEvent() {
+  if (selectedEventIndex !== null) {
+    events.splice(selectedEventIndex, 1);
+    localStorage.setItem("events", JSON.stringify(events));
+    renderCalendar(currentDate);
+    closeEventDetailsModal();
+  }
+}
+
+editEventBtn.addEventListener("click", editEvent);
+deleteEventBtn.addEventListener("click", deleteEvent);
 
 closeModalButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -180,4 +253,13 @@ window.addEventListener("load", () => {
 
 monthHolder.addEventListener("click", () => {
   location.reload();
+});
+
+window.addEventListener("click", (event) => {
+  if (event.target === eventModal) {
+    closeEventModal();
+  }
+  if (event.target === eventDetailsModal) {
+    closeEventDetailsModal();
+  }
 });

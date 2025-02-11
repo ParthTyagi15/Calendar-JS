@@ -89,14 +89,14 @@ body {
 .event {
   position: absolute;
   height: 4rem;
-  background-color: #e8f0fe;
-  border-left: 4px solid #1a73e8;
-  border-bottom: 4px solid #1a73e8;
-  border-top: 1px solid #1a73e8;
+  background-color: #13753f;
+  border-left: 4px solid #00c85a;
+  border-bottom: 4px solid #00c85a;
+  /* border-top: 1px solid #00ff73; */
   opacity: 0.9;
   padding: 8px;
   font-size: 0.8rem;
-  color: #1a73e8;
+  color: #efefef;
   border-radius: 4px;
   box-sizing: border-box;
   overflow: hidden;
