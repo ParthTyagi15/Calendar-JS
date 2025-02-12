@@ -136,14 +136,13 @@ function populateWeek(today) {
       weekEventContainer.appendChild(timeSlotElement);
     }
 
-    renderEvents();
-
     weekDay.appendChild(weekHeader);
     weekDay.appendChild(weekEventContainer);
 
     weekContainer.appendChild(weekDay);
   }
 
+  renderEvents();
   return days;
 }
 
