@@ -11,6 +11,7 @@ const eventDetailsContent = document.getElementById("event-details-content");
 const editEventBtn = document.getElementById("edit-event-btn");
 const deleteEventBtn = document.getElementById("delete-event-btn");
 const monthHolder = document.getElementById("month-holder");
+const addEventBtn = document.getElementById("add-event-btn");
 
 let currentDate = new Date();
 let events = localStorage.getItem("events")
@@ -254,6 +255,12 @@ window.addEventListener("load", () => {
 monthHolder.addEventListener("click", () => {
   location.reload();
 });
+
+addEventBtn.addEventListener("click", () => openModal(eventModal));
+
+function openModal(modal) {
+  modal.style.display = "flex";
+}
 
 window.addEventListener("click", (event) => {
   if (event.target === eventModal) {
