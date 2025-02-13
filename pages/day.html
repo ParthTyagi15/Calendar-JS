@@ -77,5 +77,43 @@
         </div>
       </div>
     </div>
+
+    <div id="event-edit-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Edit Event</h2>
+        <form id="event-edit-form">
+          <label for="event-edit-name">Event Name</label>
+          <input type="text" id="event-edit-name" required />
+
+          <label for="event-edit-date">Event Date</label>
+          <input
+            type="date"
+            name="event-edit-date"
+            id="event-edit-date"
+            required
+          />
+
+          <label for="event-edit-start-time">Start Time</label>
+          <input type="time" id="event-edit-start-time" required />
+
+          <label for="event-edit-end-time">End Time</label>
+          <input type="time" id="event-edit-end-time" required />
+
+          <label for="event-edit-attendees">Attendees</label>
+          <input
+            type="text"
+            id="event-edit-attendees"
+            placeholder="Enter attendee names"
+            required
+          />
+
+          <div class="form-buttons">
+            <button type="submit">Edit</button>
+            <button type="button" id="cancel-edit-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </body>
 </html>

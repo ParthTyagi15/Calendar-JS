@@ -15,10 +15,14 @@ function updateCalendarView(view) {
   }
 }
 
-let events = localStorage.getItem("events")
+// let events = localStorage.getItem("events")
+//   ? JSON.parse(localStorage.getItem("events"))
+//   : [];
+// let selectedEventIndex = null;
+
+const events = localStorage.getItem("events")
   ? JSON.parse(localStorage.getItem("events"))
-  : [];
-let selectedEventIndex = null;
+  : {};
 
 const addEventBtn = document.getElementById("add-event-btn");
 const eventModal = document.getElementById("event-modal");
@@ -32,6 +36,10 @@ const eventDetailsContent = document.getElementById("event-details-content");
 const editEventBtn = document.getElementById("edit-event-btn");
 const deleteEventBtn = document.getElementById("delete-event-btn");
 const weekHolder = document.getElementById("current-week");
+const eventEditModal = document.getElementById("event-edit-modal");
+const closeEditModal = document.querySelector("#event-edit-modal .close");
+const eventEditForm = document.getElementById("event-edit-form");
+const cancelEditBtn = document.getElementById("cancel-edit-btn");
 
 const prevBtn = document.querySelector(".prevBtn");
 const nextBtn = document.querySelector(".nextBtn");
@@ -61,10 +69,23 @@ closeModal.addEventListener("click", () => closeModalFunc(eventModal));
 closeDetailsModal.addEventListener("click", () =>
   closeModalFunc(eventDetailsModal)
 );
+closeEditModal.addEventListener("click", () => closeModalFunc(eventEditModal));
 cancelBtn.addEventListener("click", () => closeModalFunc(eventModal));
+cancelEditBtn.addEventListener("click", () => closeModalFunc(eventEditModal));
 eventForm.addEventListener("submit", handleFormSubmit);
-editEventBtn.addEventListener("click", editEvent);
-deleteEventBtn.addEventListener("click", deleteEvent);
+eventEditForm.addEventListener("submit", handleEditFormSubmit);
+editEventBtn.addEventListener("click", () => {
+  const eventId = editEventBtn.getAttribute("data-event-id");
+  if (eventId) {
+    editEvent(eventId);
+  }
+});
+deleteEventBtn.addEventListener("click", () => {
+  const eventId = deleteEventBtn.getAttribute("data-event-id");
+  if (eventId) {
+    deleteEvent(eventId);
+  }
+});
 
 weekHolder.addEventListener("click", () => {
   location.reload();
@@ -188,21 +209,27 @@ function closeModalFunc(modal, isEditable = false) {
 
 function handleFormSubmit(e) {
   e.preventDefault();
+
+  const eventId = Date.now().toString(); // Unique event ID
   const event = {
+    id: eventId,
     name: document.getElementById("event-name").value,
     startTime: document.getElementById("event-start-time").value,
     endTime: document.getElementById("event-end-time").value,
-    // duration: parseInt(document.getElementById("event-duration").value),
     attendees: document.getElementById("event-attendees").value,
     date: document.getElementById("event-date").value,
   };
 
-  if (selectedEventIndex !== null) {
-    events[selectedEventIndex] = event;
-    selectedEventIndex = null;
-  } else {
-    events.push(event);
+  if (event.endTime < event.startTime) {
+    alert("Sorry! Not allowed to have end time before start time");
+    return;
   }
+
+  if (event.endTime > "24:00") {
+    alert("Sorry! Not allowed");
+    return;
+  }
+  events[eventId] = event; // Store in object with unique ID
   localStorage.setItem("events", JSON.stringify(events));
   renderEvents();
   eventForm.reset();
@@ -211,18 +238,17 @@ function handleFormSubmit(e) {
 
 function renderEvents() {
   document.querySelectorAll(".event").forEach((event) => event.remove());
-  const events = JSON.parse(localStorage.getItem("events"));
-  if (!events) return;
-  events.sort((a, b) => a.startTime.localeCompare(b.startTime));
-  events.forEach((event) => {
-    const eventElement = createEventElement(event);
 
-    findAndPutEventSlot(event, eventElement);
+  const storedEvents = JSON.parse(localStorage.getItem("events"));
+  if (!storedEvents) return;
 
-    eventElement.addEventListener("click", () =>
-      displayEventDetails(event, events.indexOf(event))
-    );
-  });
+  Object.values(storedEvents)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+    .forEach((event) => {
+      const eventElement = createEventElement(event);
+      findAndPutEventSlot(event, eventElement);
+      eventElement.addEventListener("click", () => displayEventDetails(event));
+    });
 }
 
 function normaliseTime(time) {
@@ -284,42 +310,23 @@ function createEventElement(event) {
   return eventElement;
 }
 
-function displayEventDetails(event, index) {
-  selectedEventIndex = index;
-
+function displayEventDetails(event) {
   eventDetailsContent.innerHTML = "";
 
   const eventName = document.createElement("p");
-  const eventNameStrong = document.createElement("strong");
-  eventNameStrong.textContent = "Event Name: ";
-  eventName.textContent = event.name;
-  eventName.className = "textOverflow";
-  eventName.insertAdjacentElement("afterbegin", eventNameStrong);
+  eventName.innerHTML = `<strong>Event Name:</strong> ${event.name}`;
 
   const eventStartTime = document.createElement("p");
-  const eventStartTimeStrong = document.createElement("strong");
-  eventStartTimeStrong.textContent = "Start Time: ";
-  eventStartTime.textContent = event.startTime;
-  eventStartTime.insertAdjacentElement("afterbegin", eventStartTimeStrong);
+  eventStartTime.innerHTML = `<strong>Start Time:</strong> ${event.startTime}`;
 
   const eventEndTime = document.createElement("p");
-  const eventEndTimeStrong = document.createElement("strong");
-  eventEndTimeStrong.textContent = "End Time: ";
-  eventEndTime.textContent = event.endTime;
-  eventEndTime.insertAdjacentElement("afterbegin", eventEndTimeStrong);
+  eventEndTime.innerHTML = `<strong>End Time:</strong> ${event.endTime}`;
 
   const eventAttendees = document.createElement("p");
-  const eventAttendeesStrong = document.createElement("strong");
-  eventAttendeesStrong.textContent = "Attendees: ";
-  eventAttendees.textContent = event.attendees;
-  eventAttendees.className = "textOverflow";
-  eventAttendees.insertAdjacentElement("afterbegin", eventAttendeesStrong);
+  eventAttendees.innerHTML = `<strong>Attendees:</strong> ${event.attendees}`;
 
   const eventDate = document.createElement("p");
-  const eventDateStrong = document.createElement("strong");
-  eventDateStrong.textContent = "Date: ";
-  eventDate.textContent = event.date;
-  eventDate.insertAdjacentElement("afterbegin", eventDateStrong);
+  eventDate.innerHTML = `<strong>Date:</strong> ${event.date}`;
 
   eventDetailsContent.appendChild(eventName);
   eventDetailsContent.appendChild(eventStartTime);
@@ -327,33 +334,66 @@ function displayEventDetails(event, index) {
   eventDetailsContent.appendChild(eventAttendees);
   eventDetailsContent.appendChild(eventDate);
 
+  editEventBtn.setAttribute("data-event-id", event.id); // Set event ID for edit button
+  deleteEventBtn.setAttribute("data-event-id", event.id); // Set event ID for delete button
   openModal(eventDetailsModal);
 }
 
-function editEvent() {
-  if (selectedEventIndex !== null) {
-    const event = events[selectedEventIndex];
-    document.getElementById("event-name").value = event.name;
-    document.getElementById("event-start-time").value = event.startTime;
-    document.getElementById("event-end-time").value = event.endTime;
-    document.getElementById("event-attendees").value = event.attendees;
-    document.getElementById("event-date").value = event.date;
-    closeModalFunc(eventDetailsModal, true);
-    openModal(eventModal);
-    selectedEventIndex = null;
-  }
+function editEvent(eventId) {
+  const event = events[eventId];
+  if (!event) return;
+
+  // Populate the edit form with the event details
+  document.getElementById("event-edit-name").value = event.name;
+  document.getElementById("event-edit-start-time").value = event.startTime;
+  document.getElementById("event-edit-end-time").value = event.endTime;
+  document.getElementById("event-edit-attendees").value = event.attendees;
+  document.getElementById("event-edit-date").value = event.date;
+
+  // Set the event ID in the edit form
+  eventEditForm.setAttribute("data-event-id", event.id);
+
+  closeModalFunc(eventDetailsModal);
+  openModal(eventEditModal);
 }
 
-function deleteEvent() {
-  if (selectedEventIndex !== null) {
-    events.splice(selectedEventIndex, 1);
-    localStorage.setItem("events", JSON.stringify(events));
-    renderEvents();
-    closeModalFunc(eventDetailsModal);
-    selectedEventIndex = null;
+function handleEditFormSubmit(e) {
+  e.preventDefault();
+
+  const eventId = eventEditForm.getAttribute("data-event-id");
+  if (!eventId) return;
+
+  const event = {
+    id: eventId,
+    name: document.getElementById("event-edit-name").value,
+    startTime: document.getElementById("event-edit-start-time").value,
+    endTime: document.getElementById("event-edit-end-time").value,
+    attendees: document.getElementById("event-edit-attendees").value,
+    date: document.getElementById("event-edit-date").value,
+  };
+
+  if (event.endTime < event.startTime) {
+    alert("Sorry! Not allowed to have end time before start time");
+    return;
   }
+
+  if (event.endTime > "24:00") {
+    alert("Sorry! Not allowed");
+    return;
+  }
+
+  events[eventId] = event; // Update the event in the events object
+  localStorage.setItem("events", JSON.stringify(events));
+  renderEvents();
+  closeModalFunc(eventEditModal);
 }
 
+function deleteEvent(eventId) {
+  delete events[eventId];
+  localStorage.setItem("events", JSON.stringify(events));
+  renderEvents();
+  closeModalFunc(eventDetailsModal);
+}
 function groupOverlappingEvents(events) {
   const groupedEvents = [];
   let currentGroup = [];
@@ -396,5 +436,8 @@ window.addEventListener("click", (event) => {
   }
   if (event.target === eventDetailsModal) {
     closeModalFunc(eventDetailsModal);
+  }
+  if (event.target === eventEditModal) {
+    closeModalFunc(eventEditModal);
   }
 });
