@@ -24,6 +24,14 @@ nextBtn.addEventListener("click", () => {
   today.setDate(today.getDate() + 1);
   const eventsContainer = document.querySelector(".events-container");
   const timeLabelsElement = document.querySelector(".time-labels");
+  const actualToday = new Date().toDateString();
+  const header = document.querySelector(".header");
+  if (today.toDateString() == actualToday) {
+    console.log(actualToday);
+    header.classList.add("today");
+  } else {
+    header.classList.remove("today");
+  }
   timeLabelsElement.innerHTML = "";
   eventsContainer.innerHTML = "";
   populateDay();
@@ -33,6 +41,15 @@ prevBtn.addEventListener("click", () => {
   today.setDate(today.getDate() - 1);
   const eventsContainer = document.querySelector(".events-container");
   const timeLabelsElement = document.querySelector(".time-labels");
+  const actualToday = new Date().toDateString();
+  const header = document.querySelector(".header");
+  if (today.toDateString() == actualToday) {
+    console.log(actualToday);
+    header.classList.add("today");
+  } else {
+    header.classList.remove("today");
+  }
+
   timeLabelsElement.innerHTML = "";
   eventsContainer.innerHTML = "";
   populateDay();
@@ -102,10 +119,27 @@ function populateDay() {
   const eventsContainer = document.querySelector(".events-container");
   const timeLabelsElement = document.querySelector(".time-labels");
 
+  const actualToday = new Date().toDateString();
+  const header = document.querySelector(".header");
+  if (today.toDateString() == actualToday) {
+    console.log(actualToday);
+    header.classList.add("today");
+  } else {
+    header.classList.remove("today");
+  }
+
   for (let j = 0; j < 24; j++) {
     const timeLabelElement = document.createElement("div");
     timeLabelElement.className = "time-label";
-    timeLabelElement.textContent = `${j.toString().padStart(2, "0")}:00`;
+    let timeLabelText = "";
+    if (j < 12) {
+      if (j == 0) timeLabelText = `${(j + 12).toString()} AM`;
+      else timeLabelText = `${j.toString()} AM`;
+    } else {
+      if (j - 12 == 0) timeLabelText = `${j.toString()} PM`;
+      else timeLabelText = `${(j - 12).toString()} PM`;
+    }
+    timeLabelElement.textContent = timeLabelText;
     timeLabelsElement.appendChild(timeLabelElement);
     let data_time = `${j.toString().padStart(2, "0")}:00`;
     const timeSlotElement = document.createElement("div");
