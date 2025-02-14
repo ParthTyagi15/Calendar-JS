@@ -248,6 +248,8 @@ function displayEventDetails(event) {
 
   const eventAttendees = document.createElement("p");
   eventAttendees.innerHTML = `<strong>Attendees:</strong> ${event.attendees}`;
+  eventName.classList.add("textOverflow");
+  eventAttendees.classList.add("textOverflow");
 
   const eventDate = document.createElement("p");
   eventDate.innerHTML = `<strong>Date:</strong> ${event.date}`;

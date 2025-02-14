@@ -181,6 +181,9 @@ function displayEventDetails(event) {
   const eventDate = document.createElement("p");
   eventDate.innerHTML = `<strong>Date:</strong> ${event.date}`;
 
+  eventName.classList.add("textOverflow");
+  eventAttendees.classList.add("textOverflow");
+
   eventDetailsContent.appendChild(eventName);
   eventDetailsContent.appendChild(eventStartTime);
   eventDetailsContent.appendChild(eventEndTime);

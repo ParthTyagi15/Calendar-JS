@@ -3,37 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Month View</title>
+    <title>Month-Calendar</title>
     <link rel="stylesheet" href="../styles/month-style.css" />
     <script src="../scripts/month-script.js" defer></script>
   </head>
   <body>
     <div class="calendar">
       <div class="header">
-        <select id="view-select">
-          <option value="day">Day</option>
-          <option value="week">Week</option>
-          <option value="month" selected>Month</option>
-        </select>
-        <button class="prevBtn">&larr;</button>
-        <h1 id="month-holder"></h1>
-        <button class="nextBtn">&rarr;</button>
-        <button id="add-event-btn">&plus;</button>
+        <h1 id="month-holder">Month View</h1>
+        <div class="header-controls">
+          <button class="prevBtn">
+            <svg focusable="false" width="24" height="24" viewBox="0 0 24 24">
+              <path
+                d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59z"
+              ></path>
+            </svg>
+          </button>
+          <button class="nextBtn">
+            <svg focusable="false" width="24" height="24" viewBox="0 0 24 24">
+              <path
+                d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6z"
+              ></path>
+            </svg>
+          </button>
+          <button id="add-event-btn">Add Event</button>
+          <select id="view-select">
+            <option value="day">Day</option>
+            <option value="week">Week</option>
+            <option value="month" selected>Month</option>
+          </select>
+        </div>
       </div>
 
       <div class="month-container">
         <div class="days-header">
-          <h4 class="day-header">Sunday</h4>
-          <h4 class="day-header">Monday</h4>
-          <h4 class="day-header">Tuesday</h4>
-          <h4 class="day-header">Wednesday</h4>
-          <h4 class="day-header">Thursday</h4>
-          <h4 class="day-header">Friday</h4>
-          <h4 class="day-header">Saturday</h4>
+          <div class="day-header">Sunday</div>
+          <div class="day-header">Monday</div>
+          <div class="day-header">Tuesday</div>
+          <div class="day-header">Wednesday</div>
+          <div class="day-header">Thursday</div>
+          <div class="day-header">Friday</div>
+          <div class="day-header">Saturday</div>
         </div>
-        <div class="calendar-grid">
-          <!-- Days of the month will be dynamically generated -->
-        </div>
+        <div class="calendar-grid"></div>
       </div>
     </div>
 
@@ -53,9 +65,6 @@
 
           <label for="event-end-time">End Time</label>
           <input type="time" id="event-end-time" required />
-
-          <!-- <label for="event-duration">Duration (hours)</label>
-          <input type="number" id="event-duration" min="1" value="1" required /> -->
 
           <label for="event-attendees">Attendees</label>
           <input
