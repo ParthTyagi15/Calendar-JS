@@ -116,17 +116,19 @@ function populateWeek(today) {
   weekHolder.textContent = `${days[0].toLocaleDateString("en-in", {
     day: "numeric",
     weekday: "long",
-    month: "short",
+    month: "long",
     year: "numeric",
   })} - ${days[6].toLocaleDateString("en-in", {
     day: "numeric",
     weekday: "long",
-    month: "short",
+    month: "long",
     year: "numeric",
   })}`;
   for (let i = 0; i < 7; i++) {
     const weekDay = document.createElement("div");
-    weekDay.className = `week-day`;
+    weekDay.className = `week-day ${
+      days[i].toDateString() == todayDate ? "today" : ""
+    }`;
     weekDay.setAttribute("date", days[i].toDateString());
 
     const weekHeader = document.createElement("div");
