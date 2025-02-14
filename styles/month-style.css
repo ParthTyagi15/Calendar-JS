@@ -211,6 +211,7 @@ body {
 }
 
 .month-date-header {
+  position: relative;
   display: flex;
   justify-content: center;
   padding: 0.25rem;
@@ -275,6 +276,8 @@ body {
   justify-content: flex-start;
   align-items: center;
   font-weight: 900;
+  margin: 1.5px;
+  /* overflow: hidden; */
 }
 
 .calendar-cell.empty {
@@ -289,10 +292,11 @@ body {
   gap: 2px;
   flex-direction: column;
   width: 11.5rem;
+  overflow-y: auto;
 }
 
 .indicator {
-  height: 1rem;
+  height: 1.1rem;
   padding-left: 0.5rem;
 }
 

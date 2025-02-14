@@ -10,15 +10,41 @@
   <body>
     <div class="calendar">
       <div class="header">
-        <select id="view-select">
-          <option value="day" selected>Day</option>
-          <option value="week">Week</option>
-          <option value="month">Month</option>
-        </select>
-        <button class="prevBtn">&larr;</button>
         <h1 id="current-date"></h1>
-        <button class="nextBtn">&rarr;</button>
-        <button id="add-event-btn">+</button>
+        <div class="header-controls">
+          <button class="prevBtn">
+            <svg
+              focusable="false"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              class="NMm5M hhikbc"
+            >
+              <path
+                d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59z"
+              ></path>
+            </svg>
+          </button>
+          <button class="nextBtn">
+            <svg
+              focusable="false"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              class="NMm5M hhikbc"
+            >
+              <path
+                d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6z"
+              ></path>
+            </svg>
+          </button>
+          <button id="add-event-btn">Add Event</button>
+          <select id="view-select">
+            <option value="day" selected>Day</option>
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+          </select>
+        </div>
       </div>
 
       <!-- Time Slots -->

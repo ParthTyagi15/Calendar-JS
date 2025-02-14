@@ -38,7 +38,12 @@ prevBtn.addEventListener("click", () => {
   populateDay();
 });
 
-addEventBtn.addEventListener("click", () => openModal(eventModal));
+addEventBtn.addEventListener("click", () => {
+  document.getElementById("event-date").value = today
+    .toISOString()
+    .split("T")[0];
+  openModal(eventModal);
+});
 closeModal.addEventListener("click", () => closeModalFunc(eventModal));
 closeDetailsModal.addEventListener("click", () =>
   closeModalFunc(eventDetailsModal)
