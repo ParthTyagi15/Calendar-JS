@@ -115,12 +115,12 @@ function populateWeek(today) {
   const days = getCurrentWeek(today);
   weekHolder.textContent = `${days[0].toLocaleDateString("en-in", {
     day: "numeric",
-    weekday: "long",
+    // weekday: "long",
     month: "long",
     year: "numeric",
   })} - ${days[6].toLocaleDateString("en-in", {
     day: "numeric",
-    weekday: "long",
+    // weekday: "long",
     month: "long",
     year: "numeric",
   })}`;
