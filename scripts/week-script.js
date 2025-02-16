@@ -144,7 +144,15 @@ function populateWeek(today) {
       if (i == 0) {
         const timeLabelElement = document.createElement("div");
         timeLabelElement.className = "time-label";
-        timeLabelElement.textContent = `${j.toString().padStart(2, "0")}:00`;
+        let timeLabelText = "";
+        if (j < 12) {
+          if (j == 0) timeLabelText = `${(j + 12).toString()} AM`;
+          else timeLabelText = `${j.toString()} AM`;
+        } else {
+          if (j - 12 == 0) timeLabelText = `${j.toString()} PM`;
+          else timeLabelText = `${(j - 12).toString()} PM`;
+        }
+        timeLabelElement.textContent = timeLabelText;
         timeLabelsElement.appendChild(timeLabelElement);
       }
       let data_time = `${j.toString().padStart(2, "0")}:00`;
