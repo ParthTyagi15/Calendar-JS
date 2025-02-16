@@ -97,6 +97,10 @@ body {
   border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+.week-day:first-child {
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 .week-day:last-child {
   border-right: none;
 }
