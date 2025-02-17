@@ -60,8 +60,7 @@ body {
 
 .event {
   position: absolute;
-  height: 4rem;
-  background-color: #13753f;
+  background-color: #13753f; /* Default color, but will be overridden */
   border-left: 4px solid #00c85a;
   border-bottom: 4px solid #00c85a;
   opacity: 0.9;
@@ -71,10 +70,21 @@ body {
   border-radius: 4px;
   box-sizing: border-box;
   overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
-  width: calc(100% - 10px);
-  left: 0.25rem;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.event:hover {
+  opacity: 1;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Add a transparent right border to make the underlying time slot visible */
+.time-slot {
+  position: relative;
+  border-right: 10% solid transparent;
 }
 
 .modal {
@@ -87,7 +97,7 @@ body {
   background-color: rgba(0, 0, 0, 0.5);
   justify-content: center;
   align-items: center;
-  z-index: 2;
+  z-index: 100;
 }
 
 .modal-content {
