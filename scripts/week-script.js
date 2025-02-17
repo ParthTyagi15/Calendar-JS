@@ -115,12 +115,10 @@ function populateWeek(today) {
   const days = getCurrentWeek(today);
   weekHolder.textContent = `${days[0].toLocaleDateString("en-in", {
     day: "numeric",
-    // weekday: "long",
     month: "long",
     year: "numeric",
   })} - ${days[6].toLocaleDateString("en-in", {
     day: "numeric",
-    // weekday: "long",
     month: "long",
     year: "numeric",
   })}`;
@@ -173,6 +171,7 @@ function populateWeek(today) {
     weekContainer.appendChild(weekDay);
   }
 
+  currWeek = days; // Set currWeek before calling renderEvents
   renderEvents();
   return days;
 }
@@ -189,13 +188,14 @@ function getCurrentWeek(current) {
 
 function addEventListenerToSlot(slot) {
   slot.addEventListener("click", (e) => {
-    if (e.target.classList.contains("event")) {
-      return; // Prevents opening add event modal when clicking an existing event
-    }
+    // if (e.target.classList.contains("event")) {
+    //   return; // Prevents opening add event modal when clicking an existing event
+    // }
 
     const existingEvent = slot.querySelector(".event");
-    if (existingEvent) {
+    if (e.target == existingEvent) {
       existingEvent.click(); // Open event details modal
+      e.stopPropagation();
     } else {
       document.getElementById("event-start-time").value =
         slot.getAttribute("data-time");
@@ -249,35 +249,121 @@ function renderEvents() {
   document.querySelectorAll(".event").forEach((event) => event.remove());
 
   const storedEvents = JSON.parse(localStorage.getItem("events"));
-  if (!storedEvents) return;
+  if (!storedEvents || !currWeek || currWeek.length === 0) return;
 
-  Object.values(storedEvents)
-    .sort((a, b) => a.startTime.localeCompare(b.startTime))
-    .forEach((event) => {
-      const eventElement = createEventElement(event);
-      findAndPutEventSlot(event, eventElement);
-      eventElement.addEventListener("click", () => displayEventDetails(event));
+  // Get events for each day in the current week
+  for (let i = 0; i < 7; i++) {
+    const currentDay = currWeek[i].toISOString().split("T")[0];
+
+    // Get the events for this day
+    const dayEvents = Object.values(storedEvents).filter(
+      (event) => event.date === currentDay
+    );
+
+    // Sort events by start time
+    const sortedEvents = dayEvents.sort((a, b) =>
+      a.startTime.localeCompare(b.startTime)
+    );
+
+    // Group overlapping events
+    const eventGroups = groupOverlappingEvents(sortedEvents);
+
+    // Render each group with appropriate colors
+    eventGroups.forEach((group) => {
+      const colorSet = getColorSet(group.length);
+      group.forEach((event, index) => {
+        const eventElement = createEventElement(event);
+        // Apply color from the set
+        eventElement.style.backgroundColor = colorSet[index].bg;
+        eventElement.style.borderLeftColor = colorSet[index].border;
+        eventElement.style.borderBottomColor = colorSet[index].border;
+
+        findAndPutEventSlot(event, eventElement, group.length, index);
+        eventElement.addEventListener("click", (e) => {
+          e.stopPropagation();
+          displayEventDetails(event);
+        });
+      });
     });
+  }
 }
 
-function normaliseTime(time) {
-  const [hour, minute] = time.split(":");
-  return hour + ":00";
+function groupOverlappingEvents(events) {
+  if (events.length === 0) return [];
+
+  const groups = [];
+  let currentGroup = [events[0]];
+
+  for (let i = 1; i < events.length; i++) {
+    const currentEvent = events[i];
+    const lastOverlappingEvent = findLastOverlappingEvent(
+      currentGroup,
+      currentEvent
+    );
+
+    if (lastOverlappingEvent) {
+      currentGroup.push(currentEvent);
+    } else {
+      groups.push(currentGroup);
+      currentGroup = [currentEvent];
+    }
+  }
+
+  // Don't forget to add the last group
+  if (currentGroup.length > 0) {
+    groups.push(currentGroup);
+  }
+
+  return groups;
 }
 
-function findAndPutEventSlot(event, eventElement) {
+function findLastOverlappingEvent(group, currentEvent) {
+  for (let i = group.length - 1; i >= 0; i--) {
+    if (currentEvent.startTime < group[i].endTime) {
+      return group[i];
+    }
+  }
+  return null;
+}
+
+function getColorSet(count) {
+  const colorSets = [
+    { bg: "#13753f", border: "#00c85a" }, // Default green
+    { bg: "#1a73e8", border: "#4285f4" }, // Blue
+    { bg: "#d93025", border: "#ea4335" }, // Red
+    { bg: "#f9ab00", border: "#fbbc04" }, // Yellow
+    { bg: "#a142f4", border: "#b87cff" }, // Purple
+    { bg: "#f25c54", border: "#ff6b6b" }, // Coral
+    { bg: "#34a853", border: "#00c853" }, // Different green
+    { bg: "#ff6d00", border: "#ff9e40" }, // Orange
+    { bg: "#607d8b", border: "#90a4ae" }, // Blue Grey
+    { bg: "#9c27b0", border: "#ba68c8" }, // Deep Purple
+  ];
+
+  // Return as many colors as needed, cycling through the array if necessary
+  return Array(count)
+    .fill(0)
+    .map((_, i) => colorSets[i % colorSets.length]);
+}
+
+function findAndPutEventSlot(
+  event,
+  eventElement,
+  overlapCount = 1,
+  eventIndex = 0
+) {
   document.querySelectorAll(".time-slot").forEach((slot) => {
     if (
       slot.getAttribute("data-time") == normaliseTime(event.startTime) &&
       slot.getAttribute("data-day") == event.date
     ) {
-      eventElement.style.position = "relative";
+      eventElement.style.position = "absolute";
 
       const [startHour, startMinute] = event.startTime.split(":").map(Number);
       const [endHour, endMinute] = event.endTime.split(":").map(Number);
 
       let durationMinute, durationHour;
-      if (endMinute > startMinute) {
+      if (endMinute >= startMinute) {
         durationMinute = endMinute - startMinute;
         durationHour = endHour - startHour;
       } else {
@@ -291,20 +377,106 @@ function findAndPutEventSlot(event, eventElement) {
       eventElement.style.top = `${topPosition}px`;
       eventElement.style.height = `${height}px`;
 
-      // Count the existing events in the same slot
-      // let existingEvents = slot.querySelectorAll(".event");
-      // let eventWidth = 100 / (existingEvents.length + 1) + "%";
-      // let leftOffset =
-      //   existingEvents.length * (100 / (existingEvents.length + 1)) + "%";
+      // Set data attributes for later use when comparing events
+      eventElement.setAttribute("data-start-time", event.startTime);
+      eventElement.setAttribute("data-end-time", event.endTime);
+      eventElement.setAttribute("data-event-id", event.id);
 
-      // eventElement.style.width = eventWidth;
-      // eventElement.style.left = leftOffset;
-      eventElement.style.zIndex = 1;
+      // Handle overlapping events
+      const overlappingEvents = [];
+      slot.querySelectorAll(".event").forEach((existingEvent) => {
+        const existingStartTime = existingEvent.getAttribute("data-start-time");
+        const existingEndTime = existingEvent.getAttribute("data-end-time");
 
-      // existingEvents.forEach((e, index) => {
-      //   e.style.width = eventWidth;
-      //   e.style.left = index * (100 / (existingEvents.length + 1)) + "%";
-      // });
+        if (
+          (event.startTime < existingEndTime &&
+            event.endTime > existingStartTime) ||
+          (existingStartTime < event.endTime &&
+            existingEndTime > event.startTime)
+        ) {
+          overlappingEvents.push({
+            element: existingEvent,
+            startTime: existingStartTime,
+            endTime: existingEndTime,
+            id: existingEvent.getAttribute("data-event-id"),
+          });
+        }
+      });
+
+      // Get events with the same start time
+      const sameStartTimeEvents = overlappingEvents.filter(
+        (e) => e.startTime === event.startTime
+      );
+
+      if (sameStartTimeEvents.length > 0) {
+        // Adjust width for events with same start time
+        const eventsWithSameStart = [
+          ...sameStartTimeEvents,
+          {
+            element: eventElement,
+            startTime: event.startTime,
+            endTime: event.endTime,
+            id: event.id,
+          },
+        ];
+
+        // Sort by ID to ensure consistent ordering
+        eventsWithSameStart.sort((a, b) => Number(a.id) - Number(b.id));
+
+        const totalEvents = eventsWithSameStart.length;
+        const thisEventIndex = eventsWithSameStart.findIndex(
+          (e) => e.id === event.id
+        );
+
+        const eventWidth = 95 / totalEvents + "%";
+        const leftOffset = thisEventIndex * (95 / totalEvents) + "%";
+
+        eventElement.style.width = eventWidth;
+        eventElement.style.left = leftOffset;
+
+        // Apply the same adjustments to existing events with same start time
+        sameStartTimeEvents.forEach((e) => {
+          const index = eventsWithSameStart.findIndex((es) => es.id === e.id);
+          e.element.style.width = eventWidth;
+          e.element.style.left = index * (95 / totalEvents) + "%";
+        });
+      } else {
+        // If there are no events with the same start time, use full width
+        eventElement.style.width = "95%";
+        eventElement.style.left = "0";
+      }
+
+      // Handle z-index for overlapping events with different start times
+      const differentStartTimeEvents = overlappingEvents.filter(
+        (e) => e.startTime !== event.startTime
+      );
+
+      if (differentStartTimeEvents.length > 0) {
+        // Sort overlapping events by end time
+        const sortedByEndTime = [
+          ...differentStartTimeEvents,
+          {
+            element: eventElement,
+            startTime: event.startTime,
+            endTime: event.endTime,
+            id: event.id,
+          },
+        ].sort((a, b) => a.endTime.localeCompare(b.endTime));
+
+        // Set z-index based on position in the sorted array
+        // Events with earlier end times get higher z-index
+        sortedByEndTime.forEach((e, idx) => {
+          const zIndex = sortedByEndTime.length - idx; // Higher z-index for earlier end times
+          if (e.id === event.id) {
+            eventElement.style.zIndex = zIndex;
+          } else {
+            e.element.style.zIndex = zIndex;
+          }
+        });
+      } else {
+        // Default z-index if no overlapping events with different start times
+        eventElement.style.zIndex = 1;
+      }
 
       slot.appendChild(eventElement);
     }
@@ -313,10 +485,18 @@ function findAndPutEventSlot(event, eventElement) {
 
 function createEventElement(event) {
   const eventElement = document.createElement("div");
-  eventElement.className = `event`;
+  eventElement.className = "event";
   eventElement.textContent = `${event.name} (${event.attendees})`;
 
+  // Add tooltips for long event names
+  eventElement.title = `${event.name} (${event.attendees})`;
+
   return eventElement;
+}
+
+function normaliseTime(time) {
+  const [hour, minute] = time.split(":");
+  return hour + ":00";
 }
 
 function displayEventDetails(event) {

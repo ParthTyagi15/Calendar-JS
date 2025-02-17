@@ -151,9 +151,6 @@ function populateDay() {
   }
   renderEvents();
 }
-// // populateDay();
-
-// // Get DOM Elements
 
 function addEventListenerToSlot(slot) {
   slot.addEventListener("click", (e) => {
@@ -250,7 +247,10 @@ function renderEvents() {
       eventElement.style.borderBottomColor = colorSet[index].border;
 
       findAndPutEventSlot(event, eventElement, group.length, index);
-      eventElement.addEventListener("click", () => displayEventDetails(event));
+      eventElement.addEventListener("click", (e) => {
+        e.stopPropagation();
+        displayEventDetails(event);
+      });
     });
   });
 }
